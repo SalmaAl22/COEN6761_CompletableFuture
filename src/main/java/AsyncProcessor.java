@@ -10,26 +10,12 @@ public class AsyncProcessor {
 
         // // processAsync: output order follows input list order (because you stream
         // // futures in list order after all complete).
-        // public CompletableFuture<String> processAsync(List<Microservice>
-        // microservices, List<String> messages) {
-
-        // List<CompletableFuture<String>> futures = microservices.stream()
-        // .map(client ->
-        // client.retrieveAsync(messages.get(microservices.indexOf(client))))
-        // .collect(Collectors.toList()); // collect(toList()) just gathers those
-
-        // // wait for them to complete.
-
-        // return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])) //
-        // allOf(...) = “wait until
-        // // all futures are done.”
-        // .thenApply(v -> futures.stream()
-        // .map(CompletableFuture::join)
-        // .collect(Collectors.joining(" ")));
-
-        // }
-
         public CompletableFuture<String> processAsyncFailFast(List<Microservice> microservices, List<String> messages) {
+
+                if (microservices.size() != messages.size()) {
+                        return CompletableFuture.failedFuture(
+                                        new IllegalArgumentException("Services and messages size mismatch"));
+                }
 
                 List<CompletableFuture<String>> futures = microservices.stream()
                                 .map(client -> client.retrieveAsync(messages.get(microservices.indexOf(client))))
@@ -46,6 +32,11 @@ public class AsyncProcessor {
 
         public CompletableFuture<List<String>> processAsyncFailPartial(List<Microservice> microservices,
                         List<String> messages) {
+
+                if (microservices.size() != messages.size()) {
+                        return CompletableFuture.failedFuture(
+                                        new IllegalArgumentException("Services and messages size mismatch"));
+                }
 
                 List<CompletableFuture<String>> futures = microservices.stream()
                                 .map(client -> client.retrieveAsync(messages.get(microservices.indexOf(client)))
@@ -70,6 +61,11 @@ public class AsyncProcessor {
 
         public CompletableFuture<String> processAsyncFailSoft(List<Microservice> microservices, List<String> messages,
                         String fallbackValue) {
+
+                if (microservices.size() != messages.size()) {
+                        return CompletableFuture.failedFuture(
+                                        new IllegalArgumentException("Services and messages size mismatch"));
+                }
 
                 List<CompletableFuture<String>> futures = microservices.stream()
                                 .map(client -> client.retrieveAsync(messages.get(microservices.indexOf(client)))
