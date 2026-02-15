@@ -3,6 +3,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -245,6 +246,32 @@ public class AsyncProcessor_Test {
             String result = future.get();
             assertEquals(fallbackResults, result);
         });
+    }
+
+    @Test
+    @DisplayName("CompletionOrder - observes nondeterministic completion order")
+    void completionOrder_isObserved() {
+        List<Microservice> services = List.of(
+                new Microservice("svc-a"),
+                new Microservice("svc-b"),
+                new Microservice("svc-c"));
+
+        String expectedA = "svc-a:MSG";
+        String expectedB = "svc-b:MSG";
+        String expectedC = "svc-c:MSG";
+
+        List<List<String>> runs = new ArrayList<>();
+        for (int i = 0; i < 8; i++) {
+            List<String> r = processor.processAsyncCompletionOrder(services, "msg").join();
+            assertEquals(3, r.size());
+            assertTrue(r.contains(expectedA));
+            assertTrue(r.contains(expectedB));
+            assertTrue(r.contains(expectedC));
+            runs.add(new ArrayList<>(r));
+        }
+
+        boolean sawDifferentOrder = runs.stream().distinct().count() > 1;
+        assertTrue(sawDifferentOrder, "Expected at least two different completion orders across runs");
     }
 
     @Test
